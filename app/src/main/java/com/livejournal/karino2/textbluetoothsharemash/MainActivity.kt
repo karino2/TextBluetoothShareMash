@@ -9,8 +9,7 @@ import android.content.Intent
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
-import android.support.v4.content.ContextCompat.startActivity
-import android.R.attr.exported
+import android.content.Context
 import android.support.v4.content.FileProvider
 
 
@@ -39,6 +38,10 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    private val editText: EditText by lazy {
+            findViewById(R.id.editText) as EditText
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId) {
             R.id.action_share -> {
@@ -46,8 +49,15 @@ class MainActivity : AppCompatActivity() {
                 val target = File(documentPath, FILE_NAME)
                 // if(target.exists()) { target.delete() }
 
-                val msg = (findViewById(R.id.editText) as EditText).text.toString()
+                val et = editText
+                val msg = et.text.toString()
                 target.writeText(msg)
+
+                getPreferences(Context.MODE_PRIVATE).edit()
+                        .putString("LAST", msg)
+                        .apply()
+
+                et.text.clear()
 
                 val intent = Intent(Intent.ACTION_SEND)
                 intent.type = "text/plain"
@@ -57,6 +67,11 @@ class MainActivity : AppCompatActivity() {
                 intent.putExtra(Intent.EXTRA_STREAM, fileUri)
                 startActivity(intent)
                 return true
+            }
+            R.id.action_last -> {
+                editText.setText(
+                        getPreferences(Context.MODE_PRIVATE).getString("LAST", "")
+                )
             }
         }
         return super.onOptionsItemSelected(item)
